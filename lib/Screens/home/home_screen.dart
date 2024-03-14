@@ -27,7 +27,7 @@ class _HomeScreenState extends State<HomeScreen> {
     userProvider.getAllChats();
     FirebaseMessaging.instance.getInitialMessage().then((value) {
       if (value != null) {
-        userProvider.getChatWithUser(value.data['id'], context);
+        userProvider.getChatWithUser(value.data['id']);
       }
     });
   }
@@ -71,19 +71,20 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             Expanded(
   child:
-      userProvider.filteredChats.isEmpty?const Center(child: Text('No Chats'),):
+  Provider.of<UserProvider>(context, listen: true).loading?const Center(child: CircularProgressIndicator(),):
+     Provider.of<UserProvider>(context,listen: true).filteredChats.isEmpty
+          ?const Center(child: Text('No Chats'),):
       RefreshIndicator(
         onRefresh: () async {
           userProvider.getAllChats();
         },
         child: ListView.builder(
-          itemCount: userProvider.filteredChats.length,
+          itemCount: Provider.of<UserProvider>(context,listen: true).filteredChats.length,
           itemBuilder: (context, index) {
             return ListTile(
               onTap: () {
                 userProvider.getChatWithUser(
-                    userProvider.filteredChats[index]['userid'],
-                    context);
+                    userProvider.filteredChats[index]['userid'],);
               },
               leading: CircleAvatar(
                 backgroundImage: NetworkImage(userProvider.filteredChats[index]['image']),

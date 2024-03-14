@@ -38,12 +38,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
       appBar: AppBar(
         title: const Text('Settings'),
       ),
-      body: Padding(
+      body:               Provider.of<UserProvider>(context, listen: true).loading?const Center(child: CircularProgressIndicator(),):
+      Padding(
         padding: const EdgeInsets.all(15.0),
         child: SingleChildScrollView(
           child: Column(
             children: [
-              Provider.of<UserProvider>(context, listen: true).loading?const Center(child: CircularProgressIndicator(),):
                   userProvider.currentUser.isEmpty?const Center(child: Text("No User Found"),):
               Column(
                 crossAxisAlignment: CrossAxisAlignment.center,

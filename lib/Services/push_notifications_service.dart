@@ -20,9 +20,13 @@ class NotificationService{
   static void openNotification(Map payloadObj) async {
     await Future.delayed(const Duration(milliseconds: 300));
     if(payloadObj['id'] != null){
-      Provider.of<UserProvider>(NavigationService.context!, listen: false).getAllChats();
+      UserProvider().getAllChats();
       var chatWithUID = payloadObj['id'];
-      Provider.of<UserProvider>(NavigationService.context!, listen: false).getChatWithUser(chatWithUID, NavigationService.context!);
+      print (chatWithUID);
+      print ("--------------------------------");
+      print ("--------------------------------");
+      print ("--------------------------------");
+      UserProvider().getChatWithUser(chatWithUID);
     }
 
 
@@ -66,8 +70,14 @@ class NotificationService{
 
               Provider.of<UserProvider>(NavigationService.context!, listen: false).getAllChats();
               var chatWithUID = response.payload;
-              Provider.of<UserProvider>(NavigationService.context!, listen: false).getChatWithUser(chatWithUID, NavigationService.context!);
-
+              Provider.of<UserProvider>(NavigationService.context!, listen: false).getChatWithUser(chatWithUID);
+              print (chatWithUID);
+              print ("--------------------------------");
+              print ("--------------------------------");
+              print ("--------------------------------");
+              print ("--------------------------------");
+              print ("--------------------------------");
+              print ("--------------------------------");
 
           }
         },
@@ -117,9 +127,16 @@ class NotificationService{
       FirebaseMessaging.onMessageOpenedApp.listen((event) {
         print('Received FCM message: ${event.data}');
         if(event.data['id'] != null){
+          print (event.data['id']);
+          print ("--------------------------------");
+          print ("--------------------------------");
+          print ("--------------------------------");
+          print ("--------------------------------");
+          print ("--------------------------------");
+          print ("--------------------------------");
           Provider.of<UserProvider>(NavigationService.context!, listen: false).getAllChats();
           var chatWithUID = event.data['id'];
-          Provider.of<UserProvider>(NavigationService.context!, listen: false).getChatWithUser(chatWithUID, NavigationService.context!);
+          Provider.of<UserProvider>(NavigationService.context!, listen: false).getChatWithUser(chatWithUID);
         }
       });
 

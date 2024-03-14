@@ -277,19 +277,21 @@ class UserProvider with ChangeNotifier {
  List myChats=[];
   List filteredChats=[];
   getAllChats() async {
+    setLoad(true);
     var snapshot = await FirebaseFirestore.instance.collection("Users").doc(FirebaseAuth.instance.currentUser!.uid).collection("Messages").get();
     if (snapshot.docs.isEmpty) {
         myChats=[];
         filteredChats=[];
+        setLoad(false);
         notifyListeners();
         return;
     }
     List userIDS=snapshot.docs.map((e) => e.id).toList();
-
     var snapshot2 = await FirebaseFirestore.instance.collection("Users").where(
         "userid", whereIn: userIDS).get();
     myChats=snapshot2.docs;
     filteredChats=snapshot2.docs;
+    setLoad(false);
     notifyListeners();
 
   }
@@ -466,19 +468,22 @@ class UserProvider with ChangeNotifier {
         .orderBy("Time", descending: true)
         .get();
     messages=snapshot.docs;
-    print (messages);
     notifyListeners();
   }
 
-  getChatWithUser(uid, BuildContext context) {
+  getChatWithUser(uid) async{
+     setLoad(true);
      // iwant to remove every thing instack unliss homescreen
     Navigator.pushAndRemoveUntil(
-      context,
+      NavigationService.context!,
       MaterialPageRoute(builder: (context) => Chat(UID: uid)),
           (Route<dynamic> route) => route.isFirst,
     );
-    getAnotherPersonProfile(uid, context);
-    getMessages(uid);
+   await getAnotherPersonProfile(uid, NavigationService.context!).then((value) {
+      getMessages(uid);
+    });
+
+
   }
   Map anotherPerson={};
   getAnotherPersonProfile(uid, BuildContext context) {

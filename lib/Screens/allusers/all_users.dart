@@ -64,9 +64,7 @@ class _AllUsersState extends State<AllUsers> {
                     return ListTile(
                       onTap: () {
                         userProvider.getChatWithUser(
-                            userProvider.filteredUsers[index]['userid'],
-
-                            context);
+                            userProvider.filteredUsers[index]['userid'],);
                         },
                       leading: CircleAvatar(
                         backgroundImage: NetworkImage(userProvider.filteredUsers[index]['image']),
