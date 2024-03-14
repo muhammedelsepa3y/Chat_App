@@ -177,6 +177,9 @@ class UserProvider with ChangeNotifier {
           password: passwordController.text
       ).then((value) async
       {
+        await FirebaseFirestore.instance.collection("Users").doc(FirebaseAuth.instance.currentUser!.uid).update({
+          "fcm":FieldValue.arrayUnion([await FirebaseMessaging.instance.getToken()])
+        });
         EasyLoading.dismiss();
         Navigator.of(NavigationService.context!).pushReplacement(MaterialPageRoute(
             builder: (BuildContext context) => HomeScreen()));
