@@ -248,32 +248,6 @@ class UserProvider with ChangeNotifier {
     }
 
 
-  final String serverToken = "AAAAHcEVzN8:APA91bEVz0q_QI1XXbEt6AHBHqbWJgNbFEGjaaycOjmFf2wgIUQgYlp5BRv7O1dJEbU1aTN2sbLu32vGNd14_H4yF9tX7GD8iEDX7xPu3LhVsxVmKk1X7Qkxyv6tR-iULN8Eo-2rsS7-";
-
-
-  sendAndRetrieveMessage(String name,String message,String time,String targetToken) async {
-    await http.post(
-      Uri.parse("https://fcm.googleapis.com/fcm/send"),
-      headers: <String, String>{
-        'Content-Type': 'application/json',
-        'Authorization': 'key=$serverToken',
-      },
-      body: jsonEncode(
-        <String, dynamic>{
-          'notification': <String, dynamic>{
-            'body': '$message',
-            'title': '$name'
-          },
-          'priority': 'high',
-          'data': <String, dynamic>{
-            'click_action': 'FLUTTER_NOTIFICATION_CLICK',
-            'id': FirebaseAuth.instance.currentUser!.uid,
-          },
-          'to': targetToken,
-        },
-      ),
-    );
-  }
  List myChats=[];
   List filteredChats=[];
   getAllChats() async {
@@ -287,8 +261,7 @@ class UserProvider with ChangeNotifier {
         return;
     }
     List userIDS=snapshot.docs.map((e) => e.id).toList();
-    var snapshot2 = await FirebaseFirestore.instance.collection("Users").where(
-        "userid", whereIn: userIDS).get();
+    var snapshot2 = await FirebaseFirestore.instance.collection("Users").where("userid", whereIn: userIDS).get();
     myChats=snapshot2.docs;
     filteredChats=snapshot2.docs;
     setLoad(false);
@@ -473,15 +446,12 @@ class UserProvider with ChangeNotifier {
 
   getChatWithUser(uid) async{
      setLoad(true);
-     // iwant to remove every thing instack unliss homescreen
     Navigator.pushAndRemoveUntil(
       NavigationService.context!,
       MaterialPageRoute(builder: (context) => Chat(UID: uid)),
           (Route<dynamic> route) => route.isFirst,
     );
-   await getAnotherPersonProfile(uid, NavigationService.context!).then((value) {
-      getMessages(uid);
-    });
+   await getAnotherPersonProfile(uid, NavigationService.context!);
 
 
   }
@@ -526,7 +496,35 @@ class UserProvider with ChangeNotifier {
 
     }
 
+  final String serverToken = "AAAAHcEVzN8:APA91bEVz0q_QI1XXbEt6AHBHqbWJgNbFEGjaaycOjmFf2wgIUQgYlp5BRv7O1dJEbU1aTN2sbLu32vGNd14_H4yF9tX7GD8iEDX7xPu3LhVsxVmKk1X7Qkxyv6tR-iULN8Eo-2rsS7-";
+  sendAndRetrieveMessage(String name,String message,String time,String targetToken) async {
+    await http.post(
+      Uri.parse("https://fcm.googleapis.com/fcm/send"),
+      headers: <String, String>{
+        'Content-Type': 'application/json',
+        'Authorization': 'key=$serverToken',
+      },
+      body: jsonEncode(
+        <String, dynamic>{
+          'notification': <String, dynamic>{
+            'body': '$message',
+            'title': '$name'
+          },
+          'priority': 'high',
+          'data': <String, dynamic>{
+            'click_action': 'FLUTTER_NOTIFICATION_CLICK',
+            'id': FirebaseAuth.instance.currentUser!.uid,
+          },
+          'to': targetToken,
+        },
+      ),
+    );
+  }
+
 
 
 
 }
+
+///
+

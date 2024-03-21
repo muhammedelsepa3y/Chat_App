@@ -27,6 +27,7 @@ class _HomeScreenState extends State<HomeScreen> {
     userProvider.getAllChats();
     FirebaseMessaging.instance.getInitialMessage().then((value) {
       if (value != null) {
+        print ("getInitial");
         userProvider.getChatWithUser(value.data['id']);
       }
     });

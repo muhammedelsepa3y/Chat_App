@@ -20,7 +20,8 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  FirebaseMessaging.onBackgroundMessage( NotificationService.onBackgroundMessageHandler);
+  FirebaseMessaging.onBackgroundMessage(
+      NotificationService.onBackgroundMessageHandler);
   await NotificationService.initMessagingServices();
 
   await SystemChrome.setPreferredOrientations([
@@ -29,8 +30,7 @@ void main() async {
   ]);
   runApp(MultiProvider(
     providers: [
-      ChangeNotifierProvider<UserProvider>(
-          create: (context) => UserProvider()),
+      ChangeNotifierProvider<UserProvider>(create: (context) => UserProvider()),
       ChangeNotifierProvider<NavigationService>(
         create: (_) => NavigationService(),
       ),
@@ -40,7 +40,6 @@ void main() async {
 }
 
 class MyApp extends StatefulWidget {
-
   MyApp({super.key});
 
   @override
@@ -48,8 +47,6 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-
-
   @override
   Widget build(BuildContext context) {
     SizeConfig().init(context);
@@ -69,16 +66,44 @@ class _MyAppState extends State<MyApp> {
               ),
             );
           }
-          if(snapshot.hasData){
+          if (snapshot.hasData) {
             Future.delayed(Duration(seconds: 1), () {
-              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeScreen()));
+              Navigator.pushReplacement(context,
+                  MaterialPageRoute(builder: (context) => HomeScreen()));
             });
-            return Container();
+            return Scaffold(
+                backgroundColor: AppColors.white,
+                body: Center(
+                  child: Container(
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: AssetImage('assets/logo.png'),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                ));
           }
           Future.delayed(Duration(seconds: 1), () {
-            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => LoginScreen()));
+            Navigator.pushReplacement(context,
+                MaterialPageRoute(builder: (context) => LoginScreen()));
           });
-          return Container();
+          return Scaffold(
+              backgroundColor: AppColors.white,
+              body: Center(
+                child: Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage('assets/logo.png'),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              ));
         },
       ),
     );
