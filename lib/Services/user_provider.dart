@@ -230,7 +230,7 @@ class UserProvider with ChangeNotifier {
         });
         EasyLoading.dismiss();
         Future.delayed(Duration(seconds: 1), () {
-          Navigator.pushReplacement(NavigationService.context!, MaterialPageRoute(builder: (context) => HomeScreen()));
+          Navigator.pushAndRemoveUntil(NavigationService.context!, MaterialPageRoute(builder: (context) => HomeScreen()), (route) => false);
           showFlushBar("Account Created Successfully",isError: false);
           disposeAlldata();
         });
@@ -365,6 +365,7 @@ class UserProvider with ChangeNotifier {
     setLoad(true);
     var ref = FirebaseStorage.instance.ref().child("Users").child(FirebaseAuth.instance.currentUser!.uid).child("image");
     await ref.putFile(File(image!.path));
+
     var url = await ref.getDownloadURL();
     await FirebaseFirestore.instance.collection("Users").doc(FirebaseAuth.instance.currentUser!.uid).update({
       "image": url
@@ -420,7 +421,6 @@ class UserProvider with ChangeNotifier {
             .collection('Messages')
             .doc(FirebaseAuth.instance.currentUser?.uid).set({"name":currentUserName});
       });
-
       var snapshot = await FirebaseFirestore.instance.collection("Users").doc(targetUID).get();
       if (snapshot['fcm']!=null) {
         for (var token in snapshot['fcm']) {
@@ -428,6 +428,8 @@ class UserProvider with ChangeNotifier {
               ,message,DateTime.now().millisecondsSinceEpoch.toString(),token);
         }
       }
+
+
 
   }
   List messages=[];

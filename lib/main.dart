@@ -20,8 +20,7 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  FirebaseMessaging.onBackgroundMessage(
-      NotificationService.onBackgroundMessageHandler);
+  FirebaseMessaging.onBackgroundMessage(NotificationService.onBackgroundMessageHandler);
   await NotificationService.initMessagingServices();
 
   await SystemChrome.setPreferredOrientations([
@@ -39,14 +38,8 @@ void main() async {
   ));
 }
 
-class MyApp extends StatefulWidget {
-  MyApp({super.key});
+class MyApp extends StatelessWidget {
 
-  @override
-  State<MyApp> createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     SizeConfig().init(context);

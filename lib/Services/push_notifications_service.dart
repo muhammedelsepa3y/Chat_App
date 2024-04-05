@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:provider/provider.dart';
 
+import '../Components/flush_bar.dart';
 import 'navigation_service.dart';
 
 @pragma('vm:entry-point')
@@ -16,8 +17,7 @@ class NotificationService{
     if(message.data['id'] != null){
       print ("new message, application: background, action: none");
       showNotification(message);
-      var chatWithUID = message.data['id'];
-      print (chatWithUID);
+
     }
   }
   static initMessagingServices() async {
@@ -39,13 +39,9 @@ class NotificationService{
 
       const AndroidInitializationSettings initializationSettingsAndroid =
       AndroidInitializationSettings('@mipmap/ic_launcher');
-
-
-
       InitializationSettings initializationSettings =
       InitializationSettings(
         android: initializationSettingsAndroid,
-       // iOS: initializationSettingsIOS,
       );
       await flutterLocalNotificationsPlugin.initialize(
         initializationSettings,
@@ -54,10 +50,11 @@ class NotificationService{
             print ("new message, application: open or background, action: click");
             print('Received FCM message: ${response.payload}');
             var chatWithUID = response.payload;
-              Provider.of<UserProvider>(NavigationService.context!, listen: false).getAllChats();
-              Provider.of<UserProvider>(NavigationService.context!, listen: false).getChatWithUser(chatWithUID);
+            Provider.of<UserProvider>(NavigationService.context!, listen: false).getAllChats();
+            Provider.of<UserProvider>(NavigationService.context!, listen: false).getChatWithUser(chatWithUID);
           }
         },
+
       );
 
       await FirebaseMessaging.instance
@@ -72,11 +69,22 @@ class NotificationService{
         badge: true,
         sound: true,
       );
+      FirebaseMessaging.instance.getInitialMessage().then((message) {
+        print('Received FCM message: ${message?.data}');
+        var order = message?.data['id'];
+        if (order != null ) {
+          showFlushBar("New Message, You have a new message");
+          if (NavigationService.context == null){
+            return;
+          }
+          var userProvider=Provider.of<UserProvider>(NavigationService.context!, listen: false);
+          userProvider.getChatWithUser(order);
+        }
+      });
       FirebaseMessaging.onMessage.listen((event) {
         print ("new message, application: open, action: none");
         print('Received FCM message: ${event.data}');
         showNotification(event);
-
       });
       FirebaseMessaging.onMessageOpenedApp.listen((event) {
         print ("onMessageOpenedApp");

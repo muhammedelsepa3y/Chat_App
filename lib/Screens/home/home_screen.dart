@@ -1,3 +1,4 @@
+import 'package:chat/Components/flush_bar.dart';
 import 'package:chat/Screens/authentication/login_screen.dart';
 import 'package:chat/Screens/settings/settings_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -27,7 +28,7 @@ class _HomeScreenState extends State<HomeScreen> {
     userProvider.getAllChats();
     FirebaseMessaging.instance.getInitialMessage().then((value) {
       if (value != null) {
-        print ("getInitial");
+        showFlushBar("New Message, You have a new message");
         userProvider.getChatWithUser(value.data['id']);
       }
     });
