@@ -42,6 +42,7 @@ dependencies:
   firebase_messaging:
   firebase_storage:
   flutter_easyloading:
+  firebase_database: 
   provider:
   flutter_local_notifications:
   another_flushbar:
