@@ -37,8 +37,10 @@ class _ChatState extends State<Chat> {
     });
   });
   dbRef.onChildRemoved.listen((event) {
+    print(event.snapshot.value);
+    Map<dynamic, dynamic> values = event.snapshot.value as Map<dynamic, dynamic>;
     setState(() {
-      ChatList.remove(event.snapshot.value);
+      ChatList.removeWhere((element) => element['key'] == values['key']);
     });
   });
     super.initState();

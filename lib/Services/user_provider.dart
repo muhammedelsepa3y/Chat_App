@@ -495,32 +495,29 @@ class UserProvider with ChangeNotifier {
 
   deleteMessage(message) async {
     String targetUID = message['MRID'];
+    await FirebaseFirestore.instance
+        .collection('Users')
+        .doc(FirebaseAuth.instance.currentUser?.uid)
+        .collection('Messages')
+        .doc(targetUID)
+        .collection('chats').where("content",isEqualTo: message['content']).where("Time",isEqualTo: message['Time']).get().then((value) {
+      value.docs.first.reference.delete();
+    });
+    await FirebaseFirestore.instance
+        .collection('Users')
+        .doc(targetUID)
+        .collection('Messages')
+        .doc(FirebaseAuth.instance.currentUser?.uid)
+        .collection('chats').where("content",isEqualTo: message['content']).where("Time",isEqualTo: message['Time']).get().then((value) {
+      value.docs.first.reference.delete();
+    });
     DatabaseReference dbRef = FirebaseDatabase.instance.reference();
     var messages = dbRef.child("Users").child(FirebaseAuth.instance.currentUser!.uid).child("Messages").child(targetUID);
-    // Deleting the message from the current user's messages
-    var messagesSnapshot = await messages.once();
-    if (messagesSnapshot.snapshot.value != null) {
-      List values = messagesSnapshot.snapshot.value as List;
-      print (values);
-      print (message);
-      values.forEach((element) {
-        if (element['content'] == message['content'] && element['Time'] == message['Time']) {
-          messages.child(element['key']).remove();
-        }
-      });
-    }
-
-    // Deleting the message from the target user's messages
+    messages.child(message['key']).remove();
+    print (message['key']);
     var messages2 = dbRef.child("Users").child(targetUID).child("Messages").child(FirebaseAuth.instance.currentUser!.uid);
-    var messages2Snapshot = await messages2.once();
-    if (messages2Snapshot.snapshot.value != null) {
-      Map<dynamic, dynamic> values = messages2Snapshot.snapshot.value as Map<dynamic, dynamic>;
-      values.forEach((key, value) {
-        if (value['content'] == message['content'] && value['Time'] == message['Time']) {
-          messages2.child(key).remove();
-        }
-      });
-    }
+    messages2.child(message['key']).remove();
+
   }
 
   final String serverToken = "AAAAHcEVzN8:APA91bEVz0q_QI1XXbEt6AHBHqbWJgNbFEGjaaycOjmFf2wgIUQgYlp5BRv7O1dJEbU1aTN2sbLu32vGNd14_H4yF9tX7GD8iEDX7xPu3LhVsxVmKk1X7Qkxyv6tR-iULN8Eo-2rsS7-";
