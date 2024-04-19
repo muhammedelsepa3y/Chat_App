@@ -390,20 +390,25 @@ class UserProvider with ChangeNotifier {
      String temp2=DateTime.now().toString();
      temp2=temp2.substring(0,temp2.indexOf("."));
 
-     dbRef.child("Users").child(FirebaseAuth.instance.currentUser!.uid).child("Messages").child(targetUID).push().set({
+    var xz=dbRef.child("Users").child(FirebaseAuth.instance.currentUser!.uid).child("Messages").child(targetUID).push();
+    xz.set({
        "MSID": FirebaseAuth.instance.currentUser!.uid,
        "MRID": targetUID,
        "content": message,
        "Time": temp,
        "time": temp2,
+        "key":xz.key,
      });
 
-     dbRef.child("Users").child(targetUID).child("Messages").child(FirebaseAuth.instance.currentUser!.uid).push().set({
+     var xy=dbRef.child("Users").child(targetUID).child("Messages").child(FirebaseAuth.instance.currentUser!.uid).push();
+      xy.set({
        "MSID": FirebaseAuth.instance.currentUser!.uid,
        "MRID": targetUID,
        "content": message,
        "Time": temp,
         "time": temp2,
+        "key":xy.key,
+
      });
      var currentUser=await FirebaseFirestore.instance.collection("Users").doc(FirebaseAuth.instance.currentUser?.uid).get();
      String currentUserName=currentUser['name'];
@@ -495,16 +500,12 @@ class UserProvider with ChangeNotifier {
     // Deleting the message from the current user's messages
     var messagesSnapshot = await messages.once();
     if (messagesSnapshot.snapshot.value != null) {
-      Map<dynamic, dynamic> values = messagesSnapshot.snapshot.value as Map<dynamic, dynamic>;
+      List values = messagesSnapshot.snapshot.value as List;
       print (values);
       print (message);
-      values.forEach((key, value) {
-        print (value);
-        print(key);
-        print("---------------------------");
-        if (value['content'] == message['content'] && value['Time'].toString() == message['Time'].toString()) {
-
-          messages.child(key).remove();
+      values.forEach((element) {
+        if (element['content'] == message['content'] && element['Time'] == message['Time']) {
+          messages.child(element['key']).remove();
         }
       });
     }
