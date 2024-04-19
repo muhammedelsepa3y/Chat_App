@@ -1,11 +1,16 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:chat/Components/flush_bar.dart';
 import 'package:chat/Screens/home/home_screen.dart';
 import 'package:chat/Services/navigation_service.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart' ;
+
+import 'package:firebase_database/firebase_database.dart' as rtdb;
+
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
@@ -380,71 +385,80 @@ class UserProvider with ChangeNotifier {
    }
   sendMessage(String targetUID) async {
      String message=messageController.text;
-    var currentUser=await FirebaseFirestore.instance.collection("Users").doc(FirebaseAuth.instance.currentUser?.uid).get();
-    String currentUserName=currentUser['name'];
+     DatabaseReference dbRef = FirebaseDatabase.instance.reference();
+     int temp= DateTime.now().millisecondsSinceEpoch;
+     String temp2=DateTime.now().toString();
+     temp2=temp2.substring(0,temp2.indexOf("."));
+
+     dbRef.child("Users").child(FirebaseAuth.instance.currentUser!.uid).child("Messages").child(targetUID).push().set({
+       "MSID": FirebaseAuth.instance.currentUser!.uid,
+       "MRID": targetUID,
+       "content": message,
+       "Time": temp,
+       "time": temp2,
+     });
+
+     dbRef.child("Users").child(targetUID).child("Messages").child(FirebaseAuth.instance.currentUser!.uid).push().set({
+       "MSID": FirebaseAuth.instance.currentUser!.uid,
+       "MRID": targetUID,
+       "content": message,
+       "Time": temp,
+        "time": temp2,
+     });
+     var currentUser=await FirebaseFirestore.instance.collection("Users").doc(FirebaseAuth.instance.currentUser?.uid).get();
+     String currentUserName=currentUser['name'];
+     await FirebaseFirestore.instance
+         .collection('Users')
+         .doc(FirebaseAuth.instance.currentUser?.uid)
+         .collection('Messages')
+         .doc(targetUID)
+         .collection('chats')
+         .add({
+       "MSID": FirebaseAuth.instance.currentUser?.uid,
+       "MRID": targetUID,
+       "content": message,
+       "Time": temp,
+     }).then((value) {
+       FirebaseFirestore.instance
+           .collection('Users')
+           .doc(FirebaseAuth.instance.currentUser?.uid)
+           .collection('Messages')
+           .doc(targetUID).set({"name":currentUser['name']});
+     });
+     await FirebaseFirestore.instance
+         .collection('Users')
+         .doc(targetUID)
+         .collection('Messages')
+         .doc(FirebaseAuth.instance.currentUser?.uid)
+         .collection("chats")
+         .add({
+       "MSID": FirebaseAuth.instance.currentUser?.uid,
+       "MRID": targetUID,
+       "content": message,
+       "Time": temp,
+     }).then((value) {
+       FirebaseFirestore.instance
+           .collection('Users')
+           .doc(targetUID)
+           .collection('Messages')
+           .doc(FirebaseAuth.instance.currentUser?.uid).set({"name":currentUserName});
+     });
+
     setMessage("");
-    int temp= DateTime.now().millisecondsSinceEpoch;
-      await FirebaseFirestore.instance
-          .collection('Users')
-          .doc(FirebaseAuth.instance.currentUser?.uid)
-          .collection('Messages')
-          .doc(targetUID)
-          .collection('chats')
-          .add({
-        "MSID": FirebaseAuth.instance.currentUser?.uid,
-        "MRID": targetUID,
-        "content": message,
-        "Time": temp,
-      }).then((value) {
-         FirebaseFirestore.instance
-            .collection('Users')
-            .doc(FirebaseAuth.instance.currentUser?.uid)
-            .collection('Messages')
-            .doc(targetUID).set({"name":currentUser['name']});
-        getMessages(targetUID);
-      });
-      await FirebaseFirestore.instance
-          .collection('Users')
-          .doc(targetUID)
-          .collection('Messages')
-          .doc(FirebaseAuth.instance.currentUser?.uid)
-          .collection("chats")
-          .add({
-        "MSID": FirebaseAuth.instance.currentUser?.uid,
-        "MRID": targetUID,
-        "content": message,
-        "Time": temp,
-      }).then((value) {
-        FirebaseFirestore.instance
-            .collection('Users')
-            .doc(targetUID)
-            .collection('Messages')
-            .doc(FirebaseAuth.instance.currentUser?.uid).set({"name":currentUserName});
-      });
+
       var snapshot = await FirebaseFirestore.instance.collection("Users").doc(targetUID).get();
       if (snapshot['fcm']!=null) {
         for (var token in snapshot['fcm']) {
           sendAndRetrieveMessage(currentUserName
-              ,message,DateTime.now().millisecondsSinceEpoch.toString(),token);
+              ,message,token);
         }
       }
-
-
-
   }
-  List messages=[];
-   getMessages(String targetUID) async {
-    var snapshot = await FirebaseFirestore.instance
-        .collection('Users')
-        .doc(FirebaseAuth.instance.currentUser?.uid)
-        .collection('Messages')
-        .doc(targetUID)
-        .collection('chats')
-        .orderBy("Time", descending: true)
-        .get();
-    messages=snapshot.docs;
-    notifyListeners();
+  getMyImage() async {
+    var snapshot = await FirebaseFirestore.instance.collection("Users").doc(FirebaseAuth.instance.currentUser!.uid).get();
+    return snapshot['image'];
   }
+
 
   getChatWithUser(uid) async{
      setLoad(true);
@@ -468,38 +482,48 @@ class UserProvider with ChangeNotifier {
   }
 
   void clearMessagesAndAnotherPerson() {
-    messages=[];
     anotherPerson={};
     WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
       notifyListeners();
     });
   }
 
-   deleteMessage(message)async {
-    String targetUID=message['MRID'];
-    await FirebaseFirestore.instance
-        .collection('Users')
-        .doc(FirebaseAuth.instance.currentUser?.uid)
-        .collection('Messages')
-        .doc(targetUID)
-        .collection('chats').where("content",isEqualTo: message['content']).where("Time",isEqualTo: message['Time']).get().then((value) {
-      value.docs.first.reference.delete();
-    });
-    await FirebaseFirestore.instance
-        .collection('Users')
-        .doc(targetUID)
-        .collection('Messages')
-        .doc(FirebaseAuth.instance.currentUser?.uid)
-        .collection('chats').where("content",isEqualTo: message['content']).where("Time",isEqualTo: message['Time']).get().then((value) {
-      value.docs.first.reference.delete();
-    });
-    messages.remove(message);
-    getMessages(targetUID);
+  deleteMessage(message) async {
+    String targetUID = message['MRID'];
+    DatabaseReference dbRef = FirebaseDatabase.instance.reference();
+    var messages = dbRef.child("Users").child(FirebaseAuth.instance.currentUser!.uid).child("Messages").child(targetUID);
+    // Deleting the message from the current user's messages
+    var messagesSnapshot = await messages.once();
+    if (messagesSnapshot.snapshot.value != null) {
+      Map<dynamic, dynamic> values = messagesSnapshot.snapshot.value as Map<dynamic, dynamic>;
+      print (values);
+      print (message);
+      values.forEach((key, value) {
+        print (value);
+        print(key);
+        print("---------------------------");
+        if (value['content'] == message['content'] && value['Time'].toString() == message['Time'].toString()) {
 
+          messages.child(key).remove();
+        }
+      });
     }
 
+    // Deleting the message from the target user's messages
+    var messages2 = dbRef.child("Users").child(targetUID).child("Messages").child(FirebaseAuth.instance.currentUser!.uid);
+    var messages2Snapshot = await messages2.once();
+    if (messages2Snapshot.snapshot.value != null) {
+      Map<dynamic, dynamic> values = messages2Snapshot.snapshot.value as Map<dynamic, dynamic>;
+      values.forEach((key, value) {
+        if (value['content'] == message['content'] && value['Time'] == message['Time']) {
+          messages2.child(key).remove();
+        }
+      });
+    }
+  }
+
   final String serverToken = "AAAAHcEVzN8:APA91bEVz0q_QI1XXbEt6AHBHqbWJgNbFEGjaaycOjmFf2wgIUQgYlp5BRv7O1dJEbU1aTN2sbLu32vGNd14_H4yF9tX7GD8iEDX7xPu3LhVsxVmKk1X7Qkxyv6tR-iULN8Eo-2rsS7-";
-  sendAndRetrieveMessage(String name,String message,String time,String targetToken) async {
+  sendAndRetrieveMessage(String name,String message,String targetToken) async {
     await http.post(
       Uri.parse("https://fcm.googleapis.com/fcm/send"),
       headers: <String, String>{

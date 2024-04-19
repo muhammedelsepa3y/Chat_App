@@ -1,6 +1,7 @@
 import 'package:chat/Components/flush_bar.dart';
 import 'package:chat/Screens/authentication/login_screen.dart';
 import 'package:chat/Screens/settings/settings_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
@@ -72,35 +73,55 @@ class _HomeScreenState extends State<HomeScreen> {
               height: 20,
             ),
             Expanded(
-  child:
-  Provider.of<UserProvider>(context, listen: true).loading?const Center(child: CircularProgressIndicator(),):
-     Provider.of<UserProvider>(context,listen: true).filteredChats.isEmpty
-          ?const Center(child: Text('No Chats'),):
-      RefreshIndicator(
-        onRefresh: () async {
-          userProvider.getAllChats();
-        },
-        child: ListView.builder(
-          itemCount: Provider.of<UserProvider>(context,listen: true).filteredChats.length,
-          itemBuilder: (context, index) {
-            return ListTile(
-              onTap: () {
-                userProvider.getChatWithUser(
-                    userProvider.filteredChats[index]['userid'],);
-              },
-              leading: CircleAvatar(
-                backgroundImage: NetworkImage(userProvider.filteredChats[index]['image']),
-                radius: 25,
-              ),
-              title: Text(userProvider.filteredChats[index]['name']),
-              subtitle: Text(userProvider.filteredChats[index]['email']),
+              child: StreamBuilder(
+                  stream: FirebaseFirestore.instance
+                      .collection("Users")
+                      .orderBy("name", descending: false )
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator(),);
+                    }
+                    if (snapshot.hasData) {
+                      //final users = (snapshot.data! as QuerySnapshot).docs.where((element) => element['userid']!=FirebaseAuth.instance.currentUser!.uid).map((e) => e.data()).toList();
+                      final users = (snapshot.data! as QuerySnapshot).docs;
+                      //var snapshott = await FirebaseFirestore.instance.collection("Users").doc(FirebaseAuth.instance.currentUser!.uid).collection("Messages").get();
+                      // if (snapshott.docs.isEmpty) {
+                      //   myChats=[];
+                      //   filteredChats=[];
+                      //   setLoad(false);
+                      //   notifyListeners();
+                      //   return;
+                      // }
+                      // List userIDS=snapshott.docs.map((e) => e.id).toList();
+                      // var snapshot2 = await FirebaseFirestore.instance.collection("Users").where("userid", whereIn: userIDS).get();
+                      // myChats=snapshot2.docs;
+                      if (users.isEmpty) {
+                        return const Center(child: Text("No Chats found"),);
+                      }
+                      return ListView.builder(
+                        itemCount: users.length,
+                        itemBuilder: (context, index) {
+                          return ListTile(
+                            onTap: () {
+                              userProvider.getChatWithUser(
+                                users[index]['userid'],);
+                            },
+                            leading: CircleAvatar(
+                              backgroundImage: NetworkImage(users[index]['image']),
+                              radius: 25,
+                            ),
+                            title: Text(users[index]['name']),
+                            subtitle: Text(users[index]['email']),
 
-            );
-          },
-        ),
-      ),
+                          );
+                        },
+                      );
+                    }
 
-),
+                    return const Center(child: Text("Some error occured"),);
+                  }
+              ),),
             const SizedBox(
               height: 20,
 ),

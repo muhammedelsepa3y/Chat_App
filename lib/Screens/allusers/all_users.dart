@@ -1,4 +1,6 @@
 import 'package:chat/Services/user_provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -52,32 +54,47 @@ class _AllUsersState extends State<AllUsers> {
               height: 20,
             ),
             Expanded(
-              child: Provider.of<UserProvider>(context, listen: true).loading?const Center(child: CircularProgressIndicator(),):
-              userProvider.filteredUsers.isEmpty?const Center(child: Text("No Users Found"),):
-              RefreshIndicator(
-                onRefresh: () async {
-                  userProvider.getAllUsers();
-                },
-                child: ListView.builder(
-                  itemCount: userProvider.filteredUsers.length,
-                  itemBuilder: (context, index) {
-                    return ListTile(
-                      onTap: () {
-                        userProvider.getChatWithUser(
-                            userProvider.filteredUsers[index]['userid'],);
-                        },
-                      leading: CircleAvatar(
-                        backgroundImage: NetworkImage(userProvider.filteredUsers[index]['image']),
-                        radius: 25,
-                      ),
-                      title: Text(userProvider.filteredUsers[index]['name']),
-                      subtitle: Text(userProvider.filteredUsers[index]['email']),
+              child: StreamBuilder(
+                stream: FirebaseFirestore.instance
+        .collection("Users")
+        .orderBy("name", descending: false )
+        .snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator(),);
+                  }
 
+                  if (snapshot.hasData) {
+                    final users = snapshot.data!.docs
+                        .where((doc) => doc['userid'] != FirebaseAuth.instance.currentUser?.uid)
+                        .map((doc) => doc.data()) // Safe casting
+                        .toList();
+                    if (users.isEmpty) {
+                      return const Center(child: Text("No users found"),);
+                    }
+                    return ListView.builder(
+                      itemCount: users.length,
+                      itemBuilder: (context, index) {
+                        return ListTile(
+                          onTap: () {
+                            userProvider.getChatWithUser(
+                                users[index]['userid'],);
+                          },
+                          leading: CircleAvatar(
+                            backgroundImage: NetworkImage(users[index]['image']),
+                            radius: 25,
+                          ),
+                          title: Text(users[index]['name']),
+                          subtitle: Text(users[index]['email']),
+
+                        );
+                      },
                     );
-                  },
-                ),
-              ),
-            ),
+                  }
+
+                  return const Center(child: Text("Some error occured"),);
+                }
+              ),),
             const SizedBox(
               height: 20,
             ),
